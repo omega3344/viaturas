@@ -5,11 +5,6 @@ import win32com.client
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from tabulate import tabulate
-'''
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-
-'''
 
 
 
@@ -36,6 +31,11 @@ try:
 except:
     
     print("Erro ao abrir ficheiro!")
+
+# calculate time diferences
+
+def calculate_time(data, f):
+    return relativedelta(current_dateTime, datetime.strptime(data, f))
 
 # verify IPO dates
 
@@ -122,8 +122,8 @@ for index, row in data.iterrows():
     
     dataMat = str(row['DATA MATRICULA'])
     dataRev = str(row['DATA REVISAO'])
-    dif_ipo = relativedelta(current_dateTime, datetime.strptime(dataMat, f))
-    dif_rev = relativedelta(current_dateTime, datetime.strptime(dataRev, f))
+    dif_ipo = calculate_time(dataMat, f)
+    dif_rev = calculate_time(dataRev, f)
 
     if dif_ipo.months==11 and dif_ipo.days<16:
 
@@ -148,9 +148,11 @@ for index, row in data.iterrows():
         if ((row['EMAIL']) not in recipients):
             recipients.append(row['EMAIL'])
 
+recipients = [x for x in recipients if str(x) != 'nan']
             
 print(viat_ipo_table)
 print(viat_rev_table)
+print(recipients)
 
 
 # Notify
