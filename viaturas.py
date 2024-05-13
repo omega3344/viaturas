@@ -1,6 +1,6 @@
 # import libraries
 import pandas as pd
-#import openpyxl
+import openpyxl
 import win32com.client
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -14,7 +14,7 @@ try:
 
 except:
     
-    print("Erro ao abrir ficheiro!")  
+    print("Erro ao abrir ficheiro excel!")  
 
 # read email list
 try:
@@ -25,7 +25,7 @@ try:
 
 except:
     
-    print("Erro ao abrir ficheiro!")
+    print("Erro ao abrir ficheiro texto!")
 
 # calculate time diferences
 def calculate_time(data, f):
@@ -115,13 +115,13 @@ for index, row in data.iterrows():
     if dif_ipo.months==11 and dif_ipo.days<16:
 
         if (row['CATEGORIA'])=='Passageiros':
-            if passageiros(dif_ipo):
+            if (passageiros(dif_ipo)):
                 viat_ipo_table.append([row['MARCA'], row['MODELO'], row['MATRICULA'], row['DATA MATRICULA']])
                 if (row['EMAIL'] not in recipients):
                     recipients.append(row['EMAIL'])
 
         elif (row['CATEGORIA'])=='Mercadorias':
-            if mercadorias(dif_ipo):
+            if (mercadorias(dif_ipo)):
                 viat_ipo_table.append([row['MARCA'], row['MODELO'], row['MATRICULA'], row['DATA MATRICULA']])
                 if (row['EMAIL'] not in recipients):
                     recipients.append(row['EMAIL'])
@@ -136,10 +136,8 @@ for index, row in data.iterrows():
             recipients.append(row['EMAIL'])
 
 recipients = [x for x in recipients if str(x) != 'nan']
-            
-print(viat_ipo_table)
-print(viat_rev_table)
-print(recipients)
+
+print(viat_ipo_table)           
 
 # Notify
 if len(viat_ipo_table) > 0:
@@ -148,7 +146,6 @@ if len(viat_ipo_table) > 0:
     viat_html_table = tabulate(viat_ipo_table, headers=["Marca", "Modelo", "Matricula", "Data Limite"],tablefmt='html')\
         .replace("<table>",'''<table class="gmail-table">''')        
     #send_email(viat_html_table, subject, text, recipients)
-    print(viat_html_table)
 
 if len(viat_rev_table) > 0:
     subject = "AVISO - Viaturas em período de revisão anual"
@@ -156,6 +153,5 @@ if len(viat_rev_table) > 0:
     viat_html_table = tabulate(viat_rev_table, headers=["Marca", "Modelo", "Matricula"],tablefmt='html')\
         .replace("<table>",'''<table class="gmail-table">''')                
     #send_email(viat_html_table, subject, text, recipients)
-    print(viat_html_table)
 
 
