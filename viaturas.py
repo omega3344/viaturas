@@ -9,7 +9,6 @@ from tabulate import tabulate
 
 
 # read data from excel file
-
 try:
     
     data = pd.read_excel('viaturas.xlsx')
@@ -20,7 +19,6 @@ except:
     
 
 # read email list
-
 try:
     
     fich = open('lista_emails.txt', 'r', encoding='UTF-8-SIG')
@@ -33,12 +31,10 @@ except:
     print("Erro ao abrir ficheiro!")
 
 # calculate time diferences
-
 def calculate_time(data, f):
     return relativedelta(current_dateTime, datetime.strptime(data, f))
 
 # verify IPO dates
-
 def passageiros(dif):
     if dif.years==4 or dif.years==4 or dif.years>=8:
         return true
@@ -48,7 +44,6 @@ def mercadorias(dif):
         return true
 
 # send emails
-
 def send_email(viat_table, subject, text, recipients):
     
     outlook = win32com.client.Dispatch("Outlook.Application")
@@ -111,7 +106,6 @@ def send_email(viat_table, subject, text, recipients):
 
 
 ### MAIN ###
-
 f = '%Y-%m-%d %H:%M:%S'
 current_dateTime = datetime.now()
 
@@ -156,7 +150,6 @@ print(recipients)
 
 
 # Notify
-
 if len(viat_ipo_table) > 0:
     subject = "AVISO - Viaturas com data limite de inspeção em breve"
     text = "Aqui estão a(s) viatura(s) com datas limite de inspeção próximas:"
@@ -172,8 +165,5 @@ if len(viat_rev_table) > 0:
         .replace("<table>",'''<table class="gmail-table">''')                
     #send_email(viat_html_table, subject, text, recipients)
     print(viat_html_table)
-
-
-
 
 
