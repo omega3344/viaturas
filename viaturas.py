@@ -1,11 +1,10 @@
 # import libraries
 import pandas as pd
-import openpyxl
+#import openpyxl
 import win32com.client
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from tabulate import tabulate
-
 
 
 # read data from excel file
@@ -15,8 +14,7 @@ try:
 
 except:
     
-    print("Erro ao abrir ficheiro!")
-    
+    print("Erro ao abrir ficheiro!")  
 
 # read email list
 try:
@@ -24,7 +22,6 @@ try:
     fich = open('lista_emails.txt', 'r', encoding='UTF-8-SIG')
     recipients = fich.readlines()
     fich.close()
-
 
 except:
     
@@ -37,26 +34,23 @@ def calculate_time(data, f):
 # verify IPO dates
 def passageiros(dif):
     if dif.years==4 or dif.years==4 or dif.years>=8:
-        return true
+        return True
 
 def mercadorias(dif):
     if dif.years>=2:
-        return true
+        return True
 
 # send emails
-def send_email(viat_table, subject, text, recipients):
+def send_email(viat_html_table, subject, text, recipients):
     
     outlook = win32com.client.Dispatch("Outlook.Application")
     mail = outlook.CreateItem(0)
     mail.SendUsingAccount = 'geral@guimadiesel.pt'
 
-
     for recipient in recipients:
         mail.Recipients.Add(recipient).Type = 1
         
-
     mail.Subject = subject
-
 
     table_style = """
     <style>
@@ -85,7 +79,7 @@ def send_email(viat_table, subject, text, recipients):
     </style>
     """
 
-    html_body = html = f"""
+    html_body = f"""
         <html>
         <head>
         {table_style}
@@ -102,7 +96,6 @@ def send_email(viat_table, subject, text, recipients):
     mail.HTMLBody = html_body
 
     mail.Send()
-
 
 
 ### MAIN ###
@@ -147,7 +140,6 @@ recipients = [x for x in recipients if str(x) != 'nan']
 print(viat_ipo_table)
 print(viat_rev_table)
 print(recipients)
-
 
 # Notify
 if len(viat_ipo_table) > 0:
