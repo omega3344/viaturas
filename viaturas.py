@@ -32,14 +32,21 @@ def calculate_time(data, f):
     return relativedelta(current_dateTime, datetime.strptime(data, f))
 
 # verify IPO dates
-def passageiros(dif):
-    if dif.years==4 or dif.years==4 or dif.years>=8:
-        return True
+def passageiros(dif, row):
+    if dif.years==3 or dif.years==5 or dif.years>=7:
+        limit_date = (row['DATA MATRICULA'] + relativedelta(years=dif.years+1)).strftime('%Y-%m-%d')
+        return [row['MARCA'], row['MODELO'], row['MATRICULA'], limit_date]
 
-def mercadorias(dif):
-    if dif.years>=2:
-        return True
+def mercadorias(dif, row):
+    if dif.years>=1:
+        limit_date = (row['DATA MATRICULA'] + relativedelta(years=dif.years+1)).strftime('%Y-%m-%d')
+        return [row['MARCA'], row['MODELO'], row['MATRICULA'], limit_date]
 
+# append emails
+def app_email(row):
+    if (row['EMAIL'] not in recipients):
+        recipients.append(row['EMAIL'])
+    
 # send emails
 def send_email(viat_html_table, subject, text, recipients):
     
@@ -99,8 +106,8 @@ def send_email(viat_html_table, subject, text, recipients):
 
 
 ### MAIN ###
-f = '%Y-%m-%d %H:%M:%S'
-current_dateTime = datetime.now()
+f = '%Y-%m-%d %H:%M:%S'   
+current_dateTime = datetime.now().date()
 
 viat_ipo_table = []
 viat_rev_table = []
@@ -112,46 +119,43 @@ for index, row in data.iterrows():
     dif_ipo = calculate_time(dataMat, f)
     dif_rev = calculate_time(dataRev, f)
 
-    if dif_ipo.months==11 and dif_ipo.days<16:
+    print(dif_ipo.months, dif_ipo.days)
+
+    if dif_ipo.months==11 and dif_ipo.days>15:
 
         if (row['CATEGORIA'])=='Passageiros':
-            if (passageiros(dif_ipo)):
-                viat_ipo_table.append([row['MARCA'], row['MODELO'], row['MATRICULA'], row['DATA MATRICULA']])
-                if (row['EMAIL'] not in recipients):
-                    recipients.append(row['EMAIL'])
-
+            viat_ipo_table.append(passageiros(dif_ipo, row))
+            app_email(row)
+                    
         elif (row['CATEGORIA'])=='Mercadorias':
-            if (mercadorias(dif_ipo)):
-                viat_ipo_table.append([row['MARCA'], row['MODELO'], row['MATRICULA'], row['DATA MATRICULA']])
-                if (row['EMAIL'] not in recipients):
-                    recipients.append(row['EMAIL'])
-
+                viat_ipo_table.append(mercadorias(dif_ipo, row))
+                app_email(row)
+                    
         else:
             print("Categoria inválida!")
 
-    if dif_rev.months==0:
-        
+    if dif_rev.months==0:     
         viat_rev_table.append([row['MARCA'], row['MODELO'], row['MATRICULA']])
-        if ((row['EMAIL']) not in recipients):
-            recipients.append(row['EMAIL'])
+        app_email(row)
 
+# cleanup recipients
 recipients = [x for x in recipients if str(x) != 'nan']
 
 print(viat_ipo_table)           
 
 # Notify
 if len(viat_ipo_table) > 0:
-    subject = "AVISO - Viaturas com data limite de inspeção em breve"
-    text = "Aqui estão a(s) viatura(s) com datas limite de inspeção próximas:"
+    subject = "AVISO - Viaturas com data limite de inspeção próximas"
+    text = "Mapa com a(s) viatura(s) com datas limite de inspeção próximas:"
     viat_html_table = tabulate(viat_ipo_table, headers=["Marca", "Modelo", "Matricula", "Data Limite"],tablefmt='html')\
         .replace("<table>",'''<table class="gmail-table">''')        
-    #send_email(viat_html_table, subject, text, recipients)
+    send_email(viat_html_table, subject, text, recipients)
 
 if len(viat_rev_table) > 0:
     subject = "AVISO - Viaturas em período de revisão anual"
-    text = "Aqui estão a(s) viatura(s) em período de revisão anual:"
+    text = "Mapa com a(s) viatura(s) em período de revisão anual:"
     viat_html_table = tabulate(viat_rev_table, headers=["Marca", "Modelo", "Matricula"],tablefmt='html')\
         .replace("<table>",'''<table class="gmail-table">''')                
-    #send_email(viat_html_table, subject, text, recipients)
+    send_email(viat_html_table, subject, text, recipients)
 
 
