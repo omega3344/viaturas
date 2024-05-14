@@ -52,7 +52,7 @@ def send_email(viat_html_table, subject, text, recipients):
     
     outlook = win32com.client.Dispatch("Outlook.Application")
     mail = outlook.CreateItem(0)
-    mail.SendUsingAccount = 'geral@guimadiesel.pt'
+    #mail.SentOnBehalfOfName = 'geral@guimadiesel.pt'
 
     for recipient in recipients:
         mail.Recipients.Add(recipient).Type = 1
@@ -62,23 +62,23 @@ def send_email(viat_html_table, subject, text, recipients):
     table_style = """
     <style>
     .gmail-table {
-        border: solid 2px #DDEEEE;
+        border: solid 2px #81CDEB;
         border-collapse: collapse;
         border-spacing: 0;
         font: normal 14px Roboto, sans-serif;
     }
 
     .gmail-table thead th {
-        background-color: #DDEFEF;
-        border: solid 1px #DDEEEE;
-        color: #336B6B;
+        background-color: #ACD7E8;
+        border: solid 1px #81CDEB;
+        color: #2D5F73;
         padding: 10px;
         text-align: left;
         text-shadow: 1px 1px 1px #fff;
     }
 
     .gmail-table tbody td {
-        border: solid 1px #DDEEEE;
+        border: solid 1px #81CDEB;
         color: #333;
         padding: 10px;
         text-shadow: 1px 1px 1px #fff;
@@ -97,6 +97,9 @@ def send_email(viat_html_table, subject, text, recipients):
             </p>
         {viat_html_table}
         </body>
+        <footer>
+            <p style="color:#999;font-size:8px;">© 2024 - Fernando Cunha</p>
+        </footer>
         </html>
         """
 
@@ -119,8 +122,6 @@ for index, row in data.iterrows():
     dif_ipo = calculate_time(dataMat, f)
     dif_rev = calculate_time(dataRev, f)
 
-    print(dif_ipo.months, dif_ipo.days)
-
     if dif_ipo.months==11 and dif_ipo.days>15:
 
         if (row['CATEGORIA'])=='Passageiros':
@@ -139,21 +140,19 @@ for index, row in data.iterrows():
         app_email(row)
 
 # cleanup recipients
-recipients = [x for x in recipients if str(x) != 'nan']
-
-print(viat_ipo_table)           
+recipients = [x for x in recipients if str(x) != 'nan']       
 
 # Notify
 if len(viat_ipo_table) > 0:
     subject = "AVISO - Viaturas com data limite de inspeção próximas"
-    text = "Mapa com a(s) viatura(s) com datas limite de inspeção próximas:"
+    text = "Segue informação sobre a(s) viatura(s) com datas limite de inspeção próximas:"
     viat_html_table = tabulate(viat_ipo_table, headers=["Marca", "Modelo", "Matricula", "Data Limite"],tablefmt='html')\
         .replace("<table>",'''<table class="gmail-table">''')        
     send_email(viat_html_table, subject, text, recipients)
 
 if len(viat_rev_table) > 0:
     subject = "AVISO - Viaturas em período de revisão anual"
-    text = "Mapa com a(s) viatura(s) em período de revisão anual:"
+    text = "Segue informação sobre a(s) viatura(s) em período de revisão anual:"
     viat_html_table = tabulate(viat_rev_table, headers=["Marca", "Modelo", "Matricula"],tablefmt='html')\
         .replace("<table>",'''<table class="gmail-table">''')                
     send_email(viat_html_table, subject, text, recipients)
