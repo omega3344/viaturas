@@ -52,7 +52,7 @@ def send_email(viat_html_table, subject, text, recipients):
     
     outlook = win32com.client.Dispatch("Outlook.Application")
     mail = outlook.CreateItem(0)
-    #mail.SentOnBehalfOfName = 'geral@guimadiesel.pt'
+    mail.SentOnBehalfOfName = 'geral@guimadiesel.pt'
 
     for recipient in recipients:
         mail.Recipients.Add(recipient).Type = 1
