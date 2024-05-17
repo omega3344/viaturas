@@ -150,11 +150,11 @@ if len(viat_ipo_table) > 0:
     text = "Segue informação sobre a(s) viatura(s) com datas limite de inspeção próximas:"
     viat_html_table = tabulate(viat_ipo_table, headers=["Marca", "Modelo", "Matricula", "Data Limite"],tablefmt='html')\
         .replace("<table>",'''<table class="outlook-table">''')        
-    send_email(viat_html_table, subject, text, recipients)
+    #send_email(viat_html_table, subject, text, recipients)
 
 if len(viat_rev_table) > 0:
     subject = "AVISO - Viaturas em período de revisão anual"
     text = "Segue informação sobre a(s) viatura(s) em período de revisão anual:"
     viat_html_table = tabulate(viat_rev_table, headers=["Marca", "Modelo", "Matricula"],tablefmt='html')\
         .replace("<table>",'''<table class="outlook-table">''')                
-    send_email(viat_html_table, subject, text, recipients)
+    #send_email(viat_html_table, subject, text, recipients)
