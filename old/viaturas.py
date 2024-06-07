@@ -1,51 +1,21 @@
 ### IMPORT LIBRARIES ###
 
 import pandas as pd
+import openpyxl
 import win32com.client
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from tabulate import tabulate
-import os
-from dotenv import load_dotenv
-import pymongo
 
-### READ DATA ###
 
-# Load environment variables
-load_dotenv()
-try:
-    ENV_USER = os.getenv('USER')
-    ENV_PASSWORD = os.getenv('PASSWORD')
-    #ENV_USER = os.environ['USER']
-    #ENV_PASSWORD = os.environ['PASSWORD']
-except KeyError:
-    raise KeyError("Token not available!")
+### IMPORT FILES ###
 
-# Initialize the 'client' variable to None
-client = None
-try:
-    # Creating a MongoClient to connect to the local MongoDB server
-    client = pymongo.MongoClient(f'mongodb+srv://{ENV_USER}:{ENV_PASSWORD}@cluster0.gmd3vkc.mongodb.net/guimadiesel?retryWrites=true&w=majority')
-    # Getting the 'guimadiesel' database from the MongoDB server
-    db = client['guimadiesel']
-    # Getting the 'viaturas' collection from the 'mongodb' database
-    collection = db['cars']
-    print("MongoDB connection established successfully.")
-except Exception as e:
-    # Handling exceptions and printing an error message if connection fails
-    print(f"Error connecting to MongoDB: {e}")
-finally:
-    # Close the MongoDB client if it was initialized
-    if client is None:
-        client.close()
-        print("Connection closed.")
+# read data from excel file
+try:  
+    data = pd.read_excel('viaturas.xlsx')
 
-# Creating a Pandas DataFrame from collection
-
-data = pd.DataFrame(list(collection.find()))
-data['dataMat']= pd.to_datetime(data['data_mat'])
-data['dataRev']= pd.to_datetime(data['data_rev'])
-
+except:   
+    print("Erro ao abrir ficheiro excel!")  
 
 # read email list
 try:   
@@ -66,18 +36,18 @@ def calculate_time(data, f):
 # verify IPO dates
 def passageiros(dif, row):
     if dif.years==3 or dif.years==5 or dif.years>=7:
-        limit_date = (row['dataMat'] + relativedelta(years=dif.years+1)).strftime('%Y-%m-%d')
-        return [row['marca'], row['modelo'], row['matricula'], limit_date]
+        limit_date = (row['DATA MATRICULA'] + relativedelta(years=dif.years+1)).strftime('%Y-%m-%d')
+        return [row['MARCA'], row['MODELO'], row['MATRICULA'], limit_date]
 
 def mercadorias(dif, row):
     if dif.years>=1:
-        limit_date = (row['dataMat'] + relativedelta(years=dif.years+1)).strftime('%Y-%m-%d')
-        return [row['marca'], row['modelo'], row['matricula'], limit_date]
+        limit_date = (row['DATA MATRICULA'] + relativedelta(years=dif.years+1)).strftime('%Y-%m-%d')
+        return [row['MARCA'], row['MODELO'], row['MATRICULA'], limit_date]
 
 # append email recipients
 def app_email(row):
-    if (row['email'] not in recipients):
-        recipients.append(row['email'])
+    if (row['EMAIL'] not in recipients):
+        recipients.append(row['EMAIL'])
     
 # send emails
 def send_email(viat_html_table, subject, text, recipients):
@@ -89,7 +59,7 @@ def send_email(viat_html_table, subject, text, recipients):
 
     for recipient in recipients:
         mail.Recipients.Add(recipient).Type = 1
-     
+        
 # message table styling
     table_style = """
     <style>
@@ -152,31 +122,27 @@ viat_rev_table = []
 # iterate data values
 for index, row in data.iterrows():
     
-    dataMat = str(row['dataMat'])
-    dataRev = str(row['dataRev'])
+    dataMat = str(row['DATA MATRICULA'])
+    dataRev = str(row['DATA REVISAO'])
     dif_ipo = calculate_time(dataMat, f)
     dif_rev = calculate_time(dataRev, f)
 
     if dif_ipo.months==11 and dif_ipo.days>15:
-        if (row['categ'])=='Passageiros':
+        if (row['CATEGORIA'])=='Passageiros':
             viat_ipo_table.append(passageiros(dif_ipo, row))
             app_email(row)                   
-        elif (row['categ'])=='Mercadorias':
+        elif (row['CATEGORIA'])=='Mercadorias':
                 viat_ipo_table.append(mercadorias(dif_ipo, row))
                 app_email(row)                   
         else:
             print("Categoria inválida!")
 
     if dif_rev.months==0:
-        viat_rev_table.append([row['marca'], row['modelo'], row['matricula']])
+        viat_rev_table.append([row['MARCA'], row['MODELO'], row['MATRICULA']])
         app_email(row)
-
 
 # cleanup email recipients
 recipients = [x for x in recipients if str(x) != 'nan']       
-
-print(viat_ipo_table)
-
 
 # Notify recipients
 if len(viat_ipo_table) > 0:
@@ -192,4 +158,3 @@ if len(viat_rev_table) > 0:
     viat_html_table = tabulate(viat_rev_table, headers=["Marca", "Modelo", "Matricula"],tablefmt='html')\
         .replace("<table>",'''<table class="outlook-table">''')                
     send_email(viat_html_table, subject, text, recipients)
-
