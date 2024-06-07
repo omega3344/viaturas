@@ -9,6 +9,7 @@ import os
 from dotenv import load_dotenv
 import pymongo
 
+
 ### READ DATA ###
 
 # Load environment variables
@@ -16,19 +17,19 @@ load_dotenv()
 try:
     ENV_USER = os.getenv('USER')
     ENV_PASSWORD = os.getenv('PASSWORD')
-    #ENV_USER = os.environ['USER']
-    #ENV_PASSWORD = os.environ['PASSWORD']
 except KeyError:
     raise KeyError("Token not available!")
 
 # Initialize the 'client' variable to None
 client = None
+
+# Retrieve data from MongoDB database
 try:
     # Creating a MongoClient to connect to the local MongoDB server
     client = pymongo.MongoClient(f'mongodb+srv://{ENV_USER}:{ENV_PASSWORD}@cluster0.gmd3vkc.mongodb.net/guimadiesel?retryWrites=true&w=majority')
     # Getting the 'guimadiesel' database from the MongoDB server
     db = client['guimadiesel']
-    # Getting the 'viaturas' collection from the 'mongodb' database
+    # Getting the 'cars' collection from the 'mongodb' database
     collection = db['cars']
     print("MongoDB connection established successfully.")
 except Exception as e:
@@ -41,29 +42,26 @@ finally:
         print("Connection closed.")
 
 # Creating a Pandas DataFrame from collection
-
 data = pd.DataFrame(list(collection.find()))
 data['dataMat']= pd.to_datetime(data['data_mat'])
 data['dataRev']= pd.to_datetime(data['data_rev'])
 
-
-# read email list
+# Read email list
 try:   
     fich = open('lista_emails.txt', 'r', encoding='UTF-8-SIG')
     recipients = fich.readlines()
     fich.close()
-
 except:   
-    print("Erro ao abrir ficheiro texto!")
+    print("Error opening emails file!")
 
 
 ### FUNCTIONS ###
 
-# calculate time diferences
+# Calculate time diferences
 def calculate_time(data, f):
     return relativedelta(current_dateTime, datetime.strptime(data, f))
 
-# verify IPO dates
+# Verify IPO dates
 def passageiros(dif, row):
     if dif.years==3 or dif.years==5 or dif.years>=7:
         limit_date = (row['dataMat'] + relativedelta(years=dif.years+1)).strftime('%Y-%m-%d')
@@ -74,12 +72,12 @@ def mercadorias(dif, row):
         limit_date = (row['dataMat'] + relativedelta(years=dif.years+1)).strftime('%Y-%m-%d')
         return [row['marca'], row['modelo'], row['matricula'], limit_date]
 
-# append email recipients
+# Append email recipients
 def app_email(row):
     if (row['email'] not in recipients):
         recipients.append(row['email'])
     
-# send emails
+# Send emails
 def send_email(viat_html_table, subject, text, recipients):
     
     outlook = win32com.client.Dispatch("Outlook.Application")
@@ -90,7 +88,7 @@ def send_email(viat_html_table, subject, text, recipients):
     for recipient in recipients:
         mail.Recipients.Add(recipient).Type = 1
      
-# message table styling
+# Message table styling
     table_style = """
     <style>
     .outlook-table {
@@ -116,7 +114,7 @@ def send_email(viat_html_table, subject, text, recipients):
     </style>
     """
 
-# message composing
+# Message composing
     html_body = f"""
         <html>
         <head>
@@ -136,20 +134,20 @@ def send_email(viat_html_table, subject, text, recipients):
 
     mail.HTMLBody = html_body
 
-# message sending
+# Message sending
     mail.Send()
 
 
 ### MAIN ###
 
-# initializing variables
+# Initializing variables
 f = '%Y-%m-%d %H:%M:%S'   
 current_dateTime = datetime.now().date()
 
 viat_ipo_table = []
 viat_rev_table = []
 
-# iterate data values
+# Iterate data values
 for index, row in data.iterrows():
     
     dataMat = str(row['dataMat'])
@@ -171,12 +169,8 @@ for index, row in data.iterrows():
         viat_rev_table.append([row['marca'], row['modelo'], row['matricula']])
         app_email(row)
 
-
-# cleanup email recipients
+# Cleanup email recipients
 recipients = [x for x in recipients if str(x) != 'nan']       
-
-print(viat_ipo_table)
-
 
 # Notify recipients
 if len(viat_ipo_table) > 0:
@@ -192,4 +186,3 @@ if len(viat_rev_table) > 0:
     viat_html_table = tabulate(viat_rev_table, headers=["Marca", "Modelo", "Matricula"],tablefmt='html')\
         .replace("<table>",'''<table class="outlook-table">''')                
     send_email(viat_html_table, subject, text, recipients)
-

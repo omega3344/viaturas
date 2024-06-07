@@ -2,3 +2,5 @@ pandas
 openpyxl
 tabulate
 pywin32
+pymongo
+python-dotenv
